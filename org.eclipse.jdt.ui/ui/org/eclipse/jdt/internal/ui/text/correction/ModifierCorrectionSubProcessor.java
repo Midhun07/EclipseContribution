@@ -557,7 +557,7 @@ public class ModifierCorrectionSubProcessor {
 			AST ast= astRoot.getAST();
 			ASTRewrite rewrite= ASTRewrite.create(ast);
 
-			removeModifier(decl, rewrite, Modifier.ABSTRACT);
+			removeModifier(decl, rewrite, Modifier.ABSTRACT);		//Rewrite abstract method to Concrete method by removing  abstract
 
 			if (hasNoBody) {
 				Block newBody= ast.newBlock();

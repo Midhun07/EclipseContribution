@@ -1062,7 +1062,7 @@ public class ReturnTypeQuickFixTest extends QuickFixTest {
 
 		assertEqualStringsIgnoreOrder(new String[] { preview1, preview2 }, new String[] { expected1, expected2 });
 	}
-
+	
 	public void testMissingReturnStatementWithCode3() throws Exception {
 		IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
 		StringBuffer buf= new StringBuffer();
@@ -1160,4 +1160,48 @@ public class ReturnTypeQuickFixTest extends QuickFixTest {
 
 		assertExpectedExistInProposals(proposals, expected);
 	}
+	
+	public void testMissingReturnStatementWithCode5() throws Exception {
+		IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
+		StringBuffer buf= new StringBuffer();
+		buf.append("package test1;\n");
+		buf.append("public class TestOverride {\n");
+		buf.append("    int foo() {\n");
+		buf.append("        return -1;\n");
+		buf.append("        }\n");
+		buf.append("     }\n");
+		buf.append("class B extends TestOverride {\n");
+		buf.append("    @Override\n");
+		buf.append("    int foo() {\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		ICompilationUnit cu= pack1.createCompilationUnit("TestOverride.java", buf.toString(), false, null);
+
+		CompilationUnit astRoot= getASTRoot(cu);
+		ArrayList<IJavaCompletionProposal> proposals= collectCorrections(cu, astRoot);
+		assertNumberOfProposals(proposals, 3);
+		assertCorrectLabels(proposals);
+
+		ASTRewriteCorrectionProposal proposal= (ASTRewriteCorrectionProposal) proposals.get(2);
+		String preview1= getPreviewContent(proposal);
+
+		buf= new StringBuffer();
+		buf.append("package test1;\n");
+		buf.append("public class TestOverride {\n");
+		buf.append("    int foo() {\n");
+		buf.append("        return -1;\n");
+		buf.append("        }\n");
+		buf.append("     }\n");
+		buf.append("class B extends TestOverride {\n");
+		buf.append("    @Override\n");
+		buf.append("    int foo() {\n");
+		buf.append("        return super.foo();\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		String expected1= buf.toString();
+
+				
+		assertEqualStringsIgnoreOrder(new String[] {  preview1 }, new String[] {  expected1 });
+	}
+	
 }

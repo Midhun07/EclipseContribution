@@ -230,7 +230,7 @@ public class QuickFixProcessor implements IQuickFixProcessor {
 			case IProblem.NonGenericType:
 			case IProblem.UnhandledWarningToken:
 			case IProblem.UnusedWarningToken:
-			case IProblem.RedundantSuperinterface:
+			case IProblem.RedundantSuperinterface://****
 			case IProblem.JavadocInvalidMemberTypeQualification:
 			case IProblem.IncompatibleTypesInForeach:
 			case IProblem.MissingEnumConstantCase:
@@ -278,6 +278,7 @@ public class QuickFixProcessor implements IQuickFixProcessor {
 			case IProblem.InvalidUsageOfTypeAnnotations:
 			case IProblem.DuplicateInheritedDefaultMethods:
 			case IProblem.InheritedDefaultMethodConflictsWithOtherInherited:
+/*edit*/			case IProblem.SuperInterfaceMustBeAnInterface:
 				return true;
 			default:
 				return SuppressWarningsSubProcessor.hasSuppressWarningsProposal(cu.getJavaProject(), problemId)
@@ -340,7 +341,7 @@ public class QuickFixProcessor implements IQuickFixProcessor {
 				ReorgCorrectionsSubProcessor.importNotFoundProposals(context, problem, proposals);
 				ReorgCorrectionsSubProcessor.removeImportStatementProposals(context, problem, proposals);
 				break;
-			case IProblem.UndefinedMethod:
+			case IProblem.UndefinedMethod:  																										 //for undefined methods
 				UnresolvedElementsSubProcessor.getMethodProposals(context, problem, false, proposals);
 				break;
 			case IProblem.UndefinedConstructor:
@@ -408,10 +409,12 @@ public class QuickFixProcessor implements IQuickFixProcessor {
 			case IProblem.MissingReturnType:
 				ReturnTypeSubProcessor.addMissingReturnTypeProposals(context, problem, proposals);
 				break;
+				//*****
 			case IProblem.ShouldReturnValue:
 			case IProblem.ShouldReturnValueHintMissingDefault:
 				ReturnTypeSubProcessor.addMissingReturnStatementProposals(context, problem, proposals);
 				break;
+				//****
 			case IProblem.NonExternalizedStringLiteral:
 				LocalCorrectionsSubProcessor.addNLSProposals(context, problem, proposals);
 				break;
@@ -485,7 +488,7 @@ public class QuickFixProcessor implements IQuickFixProcessor {
 				ModifierCorrectionSubProcessor.addNonAccessibleReferenceProposal(context, problem, proposals, ModifierCorrectionSubProcessor.TO_VISIBLE, IProposalRelevance.CHANGE_VISIBILITY);
 				break;
 			case IProblem.BodyForAbstractMethod:
-			case IProblem.AbstractMethodInAbstractClass:
+			case IProblem.AbstractMethodInAbstractClass:		
 			case IProblem.AbstractMethodInEnum:
 			case IProblem.EnumAbstractMethodMustBeImplemented:
 				ModifierCorrectionSubProcessor.addAbstractMethodProposals(context, problem, proposals);
@@ -493,7 +496,7 @@ public class QuickFixProcessor implements IQuickFixProcessor {
 			case IProblem.AbstractMethodsInConcreteClass:
 				ModifierCorrectionSubProcessor.addAbstractTypeProposals(context, problem, proposals);
 				break;
-			case IProblem.AbstractMethodMustBeImplemented:
+			case IProblem.AbstractMethodMustBeImplemented:							//it has abstract methods
 			case IProblem.EnumConstantMustImplementAbstractMethod:
 				LocalCorrectionsSubProcessor.addUnimplementedMethodsProposals(context, problem, proposals);
 				break;
@@ -606,6 +609,9 @@ public class QuickFixProcessor implements IQuickFixProcessor {
 				break;
 			case IProblem.SuperclassMustBeAClass:
 				LocalCorrectionsSubProcessor.getInterfaceExtendsClassProposals(context, problem, proposals);
+				break;				//**********************************
+			case IProblem.SuperInterfaceMustBeAnInterface:
+				LocalCorrectionsSubProcessor.getClassImplementsInterfaceProposals(context, problem, proposals);
 				break;
 			case IProblem.CodeCannotBeReached:
 			case IProblem.DeadCode:

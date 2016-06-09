@@ -5759,6 +5759,37 @@ public class AdvancedQuickAssistTest extends QuickFixTest {
 		assertProposalDoesNotExist(proposals, CorrectionMessages.AdvancedQuickAssistProcessor_combineSelectedStrings);
 
 	}
+	///
+	public void testCombineStringsProposals6() throws Exception {
+		IPackageFragment pack1= fSourceFolder.createPackageFragment("test6", false, null);
+		StringBuffer buf= new StringBuffer();
+		buf.append("package test6;\n");
+		buf.append("public class A {\n");
+		buf.append("    public void foo() {\n");
+		buf.append("        System.out.println(\"a\"  + \"b\" + \"c\");\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		ICompilationUnit cu= pack1.createCompilationUnit("A.java", buf.toString(), false, null);
+
+		int offset= buf.toString().indexOf("\"a\"");
+		int length= "\"a\" + \"b\" + \"c\"".length();
+		AssistContext context= getCorrectionContext(cu, offset, length);
+		List<IJavaCompletionProposal> proposals= collectAssists(context, false);
+
+		assertCorrectLabels(proposals);
+		
+		buf= new StringBuffer();
+		buf.append("package test6;\n");
+		buf.append("public class A {\n");
+		buf.append("    public void foo() {\n");
+		buf.append("        System.out.println(\"abc\");\n");
+		buf.append("    }\n");
+		buf.append("}\n");
+		String expected= buf.toString();
+
+		assertExpectedExistInProposals(proposals, new String[] { expected });
+	}
+
 
 	public void testConvertToIfReturn1() throws Exception {
 		// positive cases

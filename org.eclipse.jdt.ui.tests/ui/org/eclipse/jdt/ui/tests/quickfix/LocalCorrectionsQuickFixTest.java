@@ -2496,6 +2496,38 @@ public class LocalCorrectionsQuickFixTest extends QuickFixTest {
 		assertEqualStringsIgnoreOrder(new String[] { preview1, preview2 }, new String[] { expected1, expected2 });
 	}
 
+ public void testUnimplementedMethods_bug38201() throws Exception {
+		IPackageFragment pack2= fSourceFolder.createPackageFragment("test38", false, null);
+		StringBuffer buf= new StringBuffer();
+		buf.append("package test38;\n");
+		buf.append("public abstract class A {\n");
+		buf.append("      void foo(){\n");
+		buf.append("      bar();\n");
+		buf.append("     }\n");
+		buf.append("}\n");
+		ICompilationUnit cu = pack2.createCompilationUnit("F.java", buf.toString(), false, null);
+
+		CompilationUnit astRoot= getASTRoot(cu);
+		ArrayList<IJavaCompletionProposal> proposals= collectCorrections(cu, astRoot);
+		assertNumberOfProposals(proposals, 2);
+		assertCorrectLabels(proposals);
+
+		CUCorrectionProposal proposal= (CUCorrectionProposal) proposals.get(0);
+		String preview1= getPreviewContent(proposal);
+
+		buf= new StringBuffer();
+		buf.append("package test38;\n");
+		buf.append("public abstract class A {\n");
+		buf.append("      void foo(){\n");
+		buf.append("      bar();\n");
+		buf.append("     }\n");
+		buf.append("  abstract void bar();\n");
+		buf.append("}\n");
+		String expected1= buf.toString();
+
+		assertEqualStringsIgnoreOrder(new String[] { preview1 }, new String[] { expected1});
+	}
+
 	public void testUnimplementedMethods_bug113665() throws Exception {
 		IPackageFragment pack2= fSourceFolder.createPackageFragment("test2", false, null);
 		StringBuffer buf= new StringBuffer();

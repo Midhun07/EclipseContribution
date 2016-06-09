@@ -69,6 +69,7 @@ public class ASTRewriteCorrectionProposal extends CUCorrectionProposal {
 	 */
 	public ASTRewriteCorrectionProposal(String name, ICompilationUnit cu, ASTRewrite rewrite, int relevance) {
 		this(name, cu, rewrite, relevance, JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE));
+		
 	}
 
 	/**

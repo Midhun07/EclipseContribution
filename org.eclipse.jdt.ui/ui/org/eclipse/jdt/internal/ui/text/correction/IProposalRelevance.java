@@ -51,7 +51,7 @@ public interface IProposalRelevance {
 	public static final int CREATE_CONSTANT_PREFIX_OR_SUFFIX_MATCH= 9;
 	public static final int CREATE_FIELD_PREFIX_OR_SUFFIX_MATCH= 9;
 
-	public static final int ADD_ABSTRACT_MODIFIER= 8;
+	public static final int ADD_ABSTRACT_MODIFIER= 8;		//*************************************************
 	public static final int ADD_STATIC_MODIFIER= 8;
 	public static final int ADD_DEFAULT_MODIFIER= 8;
 	public static final int ADD_PARENTHESES_AROUND_CAST= 8;
@@ -112,6 +112,7 @@ public interface IProposalRelevance {
 	public static final int REMOVE_REDUNDANT_TYPE_ARGUMENTS= 6;
 	public static final int REMOVE_REDUNDANT_SUPER_INTERFACE= 6;
 	public static final int CHANGE_EXTENDS_TO_IMPLEMENTS= 6;
+	public static final int CHANGE_IMPLEMENTS_TO_EXTENDS= 6;
 	public static final int REMOVE_OVERRIDE= 6;
 	public static final int MOVE_EXCEPTION_TO_SEPERATE_CATCH_BLOCK= 6;
 	public static final int REMOVE_ABSTRACT_MODIFIER= 6;

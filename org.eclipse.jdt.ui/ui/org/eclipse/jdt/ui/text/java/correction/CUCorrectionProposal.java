@@ -80,6 +80,7 @@ public class CUCorrectionProposal extends ChangeCorrectionProposal  {
 	 */
 	public CUCorrectionProposal(String name, ICompilationUnit cu, TextChange change, int relevance, Image image) {
 		super(name, change, relevance, image);
+		
 		if (cu == null) {
 			throw new IllegalArgumentException("Compilation unit must not be null"); //$NON-NLS-1$
 		}

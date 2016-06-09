@@ -252,7 +252,7 @@ public class QuickAssistProcessor implements IQuickAssistProcessor {
 				|| getRemoveBlockProposals(context, coveringNode, null)
 				|| getMakeVariableDeclarationFinalProposals(context, null)
 				|| getMissingCaseStatementProposals(context, coveringNode, null)
-				|| getConvertStringConcatenationProposals(context, null)
+				|| getConvertStringConcatenationProposals(context, null)			//our case
 				|| getInferDiamondArgumentsProposal(context, coveringNode, null, null);
 		}
 		return false;
@@ -1595,7 +1595,6 @@ public class QuickAssistProcessor implements IQuickAssistProcessor {
 		resultingCollections.add(proposal);
 		return true;
 	}
-
 	private static boolean getConvertStringConcatenationProposals(IInvocationContext context, Collection<ICommandAccess> resultingCollections) {
 		ASTNode node= context.getCoveringNode();
 		BodyDeclaration parentDecl= ASTResolving.findParentBodyDeclaration(node);
@@ -1616,8 +1615,9 @@ public class QuickAssistProcessor implements IQuickAssistProcessor {
 
 		InfixExpression oldInfixExpression= null;
 		while (node instanceof InfixExpression) {
+		
 			InfixExpression curr= (InfixExpression) node;
-			if (curr.resolveTypeBinding() == stringBinding && curr.getOperator() == InfixExpression.Operator.PLUS) {
+			if (curr.resolveTypeBinding() == stringBinding && curr.getOperator() == InfixExpression.Operator.PLUS) {		
 				oldInfixExpression= curr; // is a infix expression we can use
 			} else {
 				break;

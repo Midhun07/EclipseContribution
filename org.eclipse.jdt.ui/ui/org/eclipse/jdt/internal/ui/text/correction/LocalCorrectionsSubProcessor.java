@@ -563,7 +563,9 @@ public class LocalCorrectionsSubProcessor {
 		}
 		ModifierCorrectionSubProcessor.addNonAccessibleReferenceProposal(context, problem, proposals, ModifierCorrectionSubProcessor.TO_NON_STATIC, IProposalRelevance.REMOVE_STATIC_MODIFIER);
 	}
-
+	//work here.........................................................................................
+	
+	
 	public static void addUnimplementedMethodsProposals(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals) {
 		IProposableFix addMethodFix= UnimplementedCodeFix.createAddUnimplementedMethodsFix(context.getASTRoot(), problem);
 		if (addMethodFix != null) {
@@ -587,6 +589,9 @@ public class LocalCorrectionsSubProcessor {
 			proposals.add(new FixCorrectionProposal(makeAbstractFix, cleanUp, IProposalRelevance.MAKE_TYPE_ABSTRACT, image, context));
 		}
 	}
+	
+	
+	///////////////////////////////////////////////////////////
 
 	public static void addUninitializedLocalVariableProposal(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals) {
 		ICompilationUnit cu= context.getCompilationUnit();
@@ -1033,6 +1038,7 @@ public class LocalCorrectionsSubProcessor {
 
 	public static void getInterfaceExtendsClassProposals(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals) {
 		CompilationUnit root= context.getASTRoot();
+		
 		ASTNode selectedNode= problem.getCoveringNode(root);
 		if (selectedNode == null) {
 			return;
@@ -1070,8 +1076,52 @@ public class LocalCorrectionsSubProcessor {
 			proposals.add(proposal);
 		}
 	}
+	
+	
+	 public static void getClassImplementsInterfaceProposals(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals) {
+		CompilationUnit root= context.getASTRoot();
+		
+		ASTNode selectedNode= problem.getCoveringNode(root);
+		if (selectedNode == null) {
+			return;
+		}
+		while (selectedNode.getParent() instanceof Type) {
+			selectedNode= selectedNode.getParent();
+		}
 
-	public static void getUnreachableCodeProposals(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals) {
+		StructuralPropertyDescriptor locationInParent= selectedNode.getLocationInParent();
+		if (locationInParent != TypeDeclaration.SUPER_INTERFACE_TYPES_PROPERTY) {
+			return;
+		}
+
+		TypeDeclaration typeDecl= (TypeDeclaration) selectedNode.getParent();
+		{
+			ASTRewrite rewrite= ASTRewrite.create(root.getAST());
+			ASTNode placeHolder= rewrite.createMoveTarget(selectedNode);
+			ListRewrite interfaces= rewrite.getListRewrite(typeDecl, TypeDeclaration.SUPERCLASS_TYPE_PROPERTY2);
+			interfaces.insertFirst(placeHolder, null);
+
+			String label= CorrectionMessages.LocalCorrectionsSubProcessor_implementstoextends_description;
+			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
+			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), rewrite, IProposalRelevance.CHANGE_EXTENDS_TO_IMPLEMENTS, image);
+			proposals.add(proposal);
+		}
+		{
+			ASTRewrite rewrite= ASTRewrite.create(root.getAST());
+
+			rewrite.set(typeDecl, TypeDeclaration.INTERFACE_PROPERTY, Boolean.TRUE, null);
+
+			String typeName= typeDecl.getName().getIdentifier();
+			String label= Messages.format(CorrectionMessages.LocalCorrectionsSubProcessor_classtointerface_description, BasicElementLabels.getJavaElementName(typeName));
+			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
+			ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, context.getCompilationUnit(), rewrite, IProposalRelevance.CHANGE_CLASS_TO_INTERFACE, image);
+			proposals.add(proposal);
+		}
+	}
+
+
+	
+		public static void getUnreachableCodeProposals(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals) {
 		CompilationUnit root= context.getASTRoot();
 		ASTNode selectedNode= problem.getCoveringNode(root);
 		if (selectedNode == null) {

@@ -58,6 +58,7 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InfixExpression.Operator;
+
 import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -147,7 +148,7 @@ public class AdvancedQuickAssistProcessor implements IQuickAssistProcessor {
 					|| getExchangeInnerAndOuterIfConditionsProposals(context, coveringNode, null)
 					|| getExchangeOperandsProposals(context, coveringNode, null)
 					|| getCastAndAssignIfStatementProposals(context, coveringNode, null)
-					|| getCombineStringProposals(context, coveringNode, null)
+					|| getCombineStringProposals(context, coveringNode, null)  //****
 					|| getPickOutStringProposals(context, coveringNode, null)
 					|| getReplaceIfElseWithConditionalProposals(context, coveringNode, null)
 					|| getReplaceConditionalWithIfElseProposals(context, coveringNode, null)
@@ -1642,14 +1643,31 @@ public class AdvancedQuickAssistProcessor implements IQuickAssistProcessor {
 		return StubUtility.getVariableNameSuggestions(NamingConventions.VK_LOCAL, cu.getJavaProject(), binding, null, excluded);
 	}
 
+	
 	private static boolean getCombineStringProposals(IInvocationContext context, ASTNode node, Collection<ICommandAccess> resultingCollections) {
 		// we work with InfixExpressions
+		//System.out.print(node.toString());
 		InfixExpression infixExpression;
+		
 		if (node instanceof InfixExpression) {
 			infixExpression= (InfixExpression) node;
 		} else if (node.getParent() instanceof InfixExpression) {
 			infixExpression= (InfixExpression) node.getParent();
-		} else {
+		} else if(node instanceof VariableDeclarationFragment){  //****
+			VariableDeclarationFragment vr = (VariableDeclarationFragment) node;
+			Expression i = vr.getInitializer();
+		    infixExpression = (InfixExpression) i;	
+		}
+		else if(node instanceof VariableDeclarationStatement) {          	//while trying to get this proposal with spaces its reaching here.
+					List<VariableDeclarationFragment> fragmentList = ((VariableDeclarationStatement) node).fragments();
+				    VariableDeclarationFragment v = fragmentList.get(0);				   
+				    Expression i = v.getInitializer();
+				    if (i instanceof InfixExpression)
+				    	infixExpression = (InfixExpression) i;		
+				    else 
+				    	return false;
+		}
+		else{
 			return false;
 		}
 		

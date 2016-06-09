@@ -50,18 +50,21 @@ import org.eclipse.jdt.internal.corext.dom.ASTNodes;
 import org.eclipse.jdt.internal.corext.dom.Bindings;
 
 import org.eclipse.jdt.internal.ui.text.correction.ASTResolving;
+import org.eclipse.jdt.internal.ui.text.correction.IProposalRelevance;
 import org.eclipse.jdt.internal.ui.text.correction.ModifierCorrectionSubProcessor;
 
 public class NewMethodCorrectionProposal extends AbstractMethodCorrectionProposal {
 
 	private static final String KEY_NAME= "name"; //$NON-NLS-1$
 	private static final String KEY_TYPE= "type"; //$NON-NLS-1$
+	private int GetRelevance;
 
 	private List<Expression> fArguments;
 
 	//	invocationNode is MethodInvocation, ConstructorInvocation, SuperConstructorInvocation, ClassInstanceCreation, SuperMethodInvocation
 	public NewMethodCorrectionProposal(String label, ICompilationUnit targetCU, ASTNode invocationNode,  List<Expression> arguments, ITypeBinding binding, int relevance, Image image) {
 		super(label, targetCU, invocationNode, binding, relevance, image);
+		GetRelevance = relevance;
 		fArguments= arguments;
 	}
 
@@ -106,7 +109,13 @@ public class NewMethodCorrectionProposal extends AbstractMethodCorrectionProposa
 
 	@Override
 	protected void addNewModifiers(ASTRewrite rewrite, ASTNode targetTypeDecl, List<IExtendedModifier> modifiers) {
-		modifiers.addAll(rewrite.getAST().newModifiers(evaluateModifiers(targetTypeDecl)));
+	//**	
+		if(GetRelevance == IProposalRelevance.ADD_ABSTRACT_MODIFIER){	//check relevance and proceed with abstract method if relevance = abstract
+			modifiers.addAll(rewrite.getAST().newModifiers(Modifier.ABSTRACT));//***
+		}else{
+			modifiers.addAll(rewrite.getAST().newModifiers(evaluateModifiers(targetTypeDecl)));	//else proceed with normal method declaration
+		}
+		
 		ModifierCorrectionSubProcessor.installLinkedVisibilityProposals(getLinkedProposalModel(), rewrite, modifiers, getSenderBinding().isInterface());
 	}
 

@@ -28,12 +28,15 @@ import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.Javadoc;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+//import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.TagElement;
 import org.eclipse.jdt.core.dom.TextElement;
 import org.eclipse.jdt.core.dom.Type;
@@ -41,6 +44,8 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite.ImportRewriteContext;
+//import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import org.eclipse.jdt.internal.corext.codemanipulation.ContextSensitiveImportRewriteContext;
 import org.eclipse.jdt.internal.corext.dom.ASTNodes;
@@ -210,7 +215,7 @@ public class ReturnTypeSubProcessor {
 
 	public static void addMissingReturnTypeProposals(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals) {
 		ICompilationUnit cu= context.getCompilationUnit();
-
+	
 		CompilationUnit astRoot= context.getASTRoot();
 		ASTNode selectedNode= problem.getCoveringNode(astRoot);
 		if (selectedNode == null) {
@@ -240,6 +245,8 @@ public class ReturnTypeSubProcessor {
 			Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
 			LinkedCorrectionProposal proposal= new LinkedCorrectionProposal(label, cu, rewrite, IProposalRelevance.MISSING_RETURN_TYPE, image);
 
+			
+		
 			ImportRewrite imports= proposal.createImportRewrite(astRoot);
 			ImportRewriteContext importRewriteContext= new ContextSensitiveImportRewriteContext(decl, imports);
 			Type type= imports.addImport(typeBinding, ast, importRewriteContext);
@@ -268,6 +275,7 @@ public class ReturnTypeSubProcessor {
 			}
 
 			proposals.add(proposal);
+			
 
 			// change to constructor
 			ASTNode parentType= ASTResolving.findParentType(decl);
@@ -283,7 +291,7 @@ public class ReturnTypeSubProcessor {
 		}
 	}
 
-	public static void addMissingReturnStatementProposals(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals) {
+	public static void addMissingReturnStatementProposals(IInvocationContext context, IProblemLocation problem, Collection<ICommandAccess> proposals)  {
 		ICompilationUnit cu= context.getCompilationUnit();
 
 		ASTNode selectedNode= problem.getCoveringNode(context.getASTRoot());
@@ -294,7 +302,7 @@ public class ReturnTypeSubProcessor {
 		// Lambda Expression can be in a MethodDeclaration or a Field Declaration
 		if (selectedNode instanceof LambdaExpression) {
 			MissingReturnTypeInLambdaCorrectionProposal proposal= new MissingReturnTypeInLambdaCorrectionProposal(cu, (LambdaExpression) selectedNode, existingStatement,
-					IProposalRelevance.MISSING_RETURN_TYPE);
+					IProposalRelevance.MISSING_RETURN_TYPE);			
 			proposals.add(proposal);
 		} else {
 			BodyDeclaration decl= ASTResolving.findParentBodyDeclaration(selectedNode);
@@ -305,7 +313,7 @@ public class ReturnTypeSubProcessor {
 					return;
 				}
 				proposals.add(new MissingReturnTypeCorrectionProposal(cu, methodDecl, existingStatement, IProposalRelevance.MISSING_RETURN_TYPE));
-
+				
 				Type returnType= methodDecl.getReturnType2();
 				if (returnType != null && !"void".equals(ASTNodes.asString(returnType))) { //$NON-NLS-1$
 					AST ast= methodDecl.getAST();
@@ -318,12 +326,37 @@ public class ReturnTypeSubProcessor {
 							rewrite.remove(tagElement, null);
 						}
 					}
-
 					String label= CorrectionMessages.ReturnTypeSubProcessor_changetovoid_description;
 					Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
 					ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, IProposalRelevance.CHANGE_RETURN_TYPE_TO_VOID, image);
 					proposals.add(proposal);
+					//******
+					ASTRewrite rewriter = ASTRewrite.create(ast);
+					if (selectedNode instanceof MethodDeclaration){
+						MethodDeclaration method = (MethodDeclaration) selectedNode;
+						IMethodBinding methodBinding = method.resolveBinding();
+						ITypeBinding classBinding = methodBinding.getDeclaringClass();
+						ITypeBinding superClassBinding = classBinding.getSuperclass();
+						if (superClassBinding != null){
+							for (IMethodBinding parentMethodBinding : superClassBinding.getDeclaredMethods()){
+								if (methodBinding.overrides(parentMethodBinding)){
+									ReturnStatement rs = ast.newReturnStatement();
+									SuperMethodInvocation smi = ast.newSuperMethodInvocation();
+									smi.setName(ast.newSimpleName(method.getName().getIdentifier()));
+									rs.setExpression(smi);
+									Block oldBody = methodDecl.getBody();
+								    ListRewrite listRewrite = rewriter.getListRewrite(oldBody, Block.STATEMENTS_PROPERTY);
+								    listRewrite.insertFirst(rs, null);
+								    String label2 = CorrectionMessages.ReturnTypeSubProcessor_addsupertype_description;////////////////
+									ASTRewriteCorrectionProposal proposal2= new ASTRewriteCorrectionProposal(label2, cu, rewriter, IProposalRelevance.CHANGE_RETURN_TYPE_TO_VOID, image);///////////
+									proposals.add(proposal2);
+								}
+							}
+						}
+					
+					
 				}
+			 }
 			}
 		}
 	}
@@ -349,4 +382,5 @@ public class ReturnTypeSubProcessor {
 			TypeMismatchSubProcessor.addChangeSenderTypeProposals(context, expression, retType.resolveBinding(), false, IProposalRelevance.METHOD_RETURNS_VOID, proposals);
 		}
 	}
+	
 }

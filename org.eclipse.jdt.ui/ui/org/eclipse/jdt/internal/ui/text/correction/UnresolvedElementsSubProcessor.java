@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
-
 import org.osgi.framework.Bundle;
 
 import org.eclipse.swt.graphics.Image;
@@ -983,30 +982,36 @@ public class UnresolvedElementsSubProcessor {
 			}
 		}
 	}
-
+	//getMethodProposal*-***************************************************************************
 	public static void getMethodProposals(IInvocationContext context, IProblemLocation problem, boolean isOnlyParameterMismatch, Collection<ICommandAccess> proposals) throws CoreException {
 
-		ICompilationUnit cu= context.getCompilationUnit();
+		ICompilationUnit cu= context.getCompilationUnit();		//get Java compilation unit
 
-		CompilationUnit astRoot= context.getASTRoot();
-		ASTNode selectedNode= problem.getCoveringNode(astRoot);
+		CompilationUnit astRoot= context.getASTRoot();		//get root node of tree
+		
+		
+		ASTNode selectedNode= problem.getCoveringNode(astRoot);	//get the method/class covering this problem
 
 		if (!(selectedNode instanceof SimpleName)) {
 			return;
-		}
-		SimpleName nameNode= (SimpleName) selectedNode;
+		}		//return if selectednode doen't have props of SimpleName
+		SimpleName nameNode= (SimpleName) selectedNode;	//get name of the covering node ie. The class or method
 
-		List<Expression> arguments;
-		Expression sender;
-		boolean isSuperInvocation;
+		List<Expression> arguments;	//to hold arguments of the method
+		Expression sender;		//to hold the expression in the method
+		boolean isSuperInvocation;		//is method overriding a super method
 
-		ASTNode invocationNode= nameNode.getParent();
-		if (invocationNode instanceof MethodInvocation) {
+		ASTNode invocationNode= nameNode.getParent();		//parent class/method of problem node
+		
+		/*
+		 * Here check if the given node is a method declaration
+		 */
+		if (invocationNode instanceof MethodInvocation) {		//check if  the problem node is a normal method declaration
 			MethodInvocation methodImpl= (MethodInvocation) invocationNode;
-			arguments= methodImpl.arguments();
-			sender= methodImpl.getExpression();
+			arguments= methodImpl.arguments();	//fetch arguments
+			sender= methodImpl.getExpression();	//fetch expression
 			isSuperInvocation= false;
-		} else if (invocationNode instanceof SuperMethodInvocation) {
+		} else if (invocationNode instanceof SuperMethodInvocation) {  //check if  the problem node is a super method declaration
 			SuperMethodInvocation methodImpl= (SuperMethodInvocation) invocationNode;
 			arguments= methodImpl.arguments();
 			sender= methodImpl.getQualifier();
@@ -1015,19 +1020,23 @@ public class UnresolvedElementsSubProcessor {
 			return;
 		}
 
-		String methodName= nameNode.getIdentifier();
+		String methodName= nameNode.getIdentifier();		//fetch the proper identifier from the node-name
 		int nArguments= arguments.size();
 
 		// corrections
 		IBinding[] bindings= (new ScopeAnalyzer(astRoot)).getDeclarationsInScope(nameNode, ScopeAnalyzer.METHODS);
-
+/*
+ * bindings will have only those methods that are required for the correction
+ */
 		HashSet<String> suggestedRenames= new HashSet<>();
 		for (int i= 0; i < bindings.length; i++) {
-			IMethodBinding binding= (IMethodBinding) bindings[i];
-			String curr= binding.getName();
+			IMethodBinding binding= (IMethodBinding) bindings[i];	//get the method 
+			String curr= binding.getName();		//get the name of the method
 			if (!curr.equals(methodName) && binding.getParameterTypes().length == nArguments && NameMatcher.isSimilarName(methodName, curr) && suggestedRenames.add(curr)) {
 				String label= Messages.format(CorrectionMessages.UnresolvedElementsSubProcessor_changemethod_description, BasicElementLabels.getJavaElementName(curr));
+				String label2= Messages.format(CorrectionMessages.ModifierCorrectionSubProcessor_changemodifiertoabstract_description,BasicElementLabels.getJavaElementName(curr) );
 				proposals.add(new RenameNodeCorrectionProposal(label, context.getCompilationUnit(), problem.getOffset(), problem.getLength(), curr, IProposalRelevance.CHANGE_METHOD));
+				proposals.add(new RenameNodeCorrectionProposal(label2, context.getCompilationUnit(), problem.getOffset(), problem.getLength(), curr, IProposalRelevance.CHANGE_METHOD));
 			}
 		}
 		suggestedRenames= null;
@@ -1061,7 +1070,7 @@ public class UnresolvedElementsSubProcessor {
 			ReplaceCorrectionProposal proposal= new ReplaceCorrectionProposal(label, cu, invocationNode.getStartPosition(), 0, str, relevance);
 			proposals.add(proposal);
 		}
-
+	
 	}
 	
 	private static void addStaticImportFavoriteProposals(IInvocationContext context, SimpleName node, boolean isMethod, Collection<ICommandAccess> proposals) throws JavaModelException {
@@ -1109,7 +1118,7 @@ public class UnresolvedElementsSubProcessor {
 	
 
 	private static void addNewMethodProposals(ICompilationUnit cu, CompilationUnit astRoot, Expression sender, List<Expression> arguments, boolean isSuperInvocation, ASTNode invocationNode, String methodName, Collection<ICommandAccess> proposals) throws JavaModelException {
-		ITypeBinding nodeParentType= Bindings.getBindingOfParentType(invocationNode);
+		ITypeBinding nodeParentType= Bindings.getBindingOfParentType(invocationNode);	//get the distinction of parent 
 		ITypeBinding binding= null;
 		if (sender != null) {
 			binding= sender.resolveTypeBinding();
@@ -1119,12 +1128,12 @@ public class UnresolvedElementsSubProcessor {
 				binding= binding.getSuperclass();
 			}
 		}
-		if (binding != null && binding.isFromSource()) {
+		if (binding != null && binding.isFromSource()) {	//isFromScource tell whether a type is user defined or not
 			ITypeBinding senderDeclBinding= binding.getTypeDeclaration();
 
 			ICompilationUnit targetCU= ASTResolving.findCompilationUnitForBinding(cu, astRoot, senderDeclBinding);
 			if (targetCU != null) {
-				String label;
+				String label,label1;
 				Image image;
 				ITypeBinding[] parameterTypes= getParameterTypes(arguments);
 				if (parameterTypes != null) {
@@ -1132,7 +1141,9 @@ public class UnresolvedElementsSubProcessor {
 
 					if (nodeParentType == senderDeclBinding) {
 						label= Messages.format(CorrectionMessages.UnresolvedElementsSubProcessor_createmethod_description, sig);
+						label1=Messages.format(CorrectionMessages.ModifierCorrectionSubProcessor_changemodifiertoabstract_description, sig);
 						image= JavaPluginImages.get(JavaPluginImages.IMG_MISC_PRIVATE);
+/*Change here*/proposals.add(new NewMethodCorrectionProposal(label1, targetCU, invocationNode, arguments, senderDeclBinding, IProposalRelevance.ADD_ABSTRACT_MODIFIER, image));
 					} else {
 						label= Messages.format(CorrectionMessages.UnresolvedElementsSubProcessor_createmethod_other_description, new Object[] { sig, BasicElementLabels.getJavaElementName(senderDeclBinding.getName()) } );
 						image= JavaPluginImages.get(JavaPluginImages.IMG_MISC_PUBLIC);

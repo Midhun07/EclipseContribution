@@ -108,6 +108,7 @@ public final class CorrectionMessages extends NLS {
 	public static String LocalCorrectionsSubProcessor_classtointerface_description;
 	public static String LocalCorrectionsSubProcessor_externalizestrings_description;
 	public static String LocalCorrectionsSubProcessor_extendstoimplements_description;
+	public static String LocalCorrectionsSubProcessor_implementstoextends_description;
 	public static String LocalCorrectionsSubProcessor_setparenteses_bitop_description;
 	public static String LocalCorrectionsSubProcessor_uninitializedvariable_description;
 	public static String LocalCorrectionsSubProcessor_removesemicolon_description;
@@ -161,6 +162,7 @@ public final class CorrectionMessages extends NLS {
 	public static String ReturnTypeSubProcessor_voidmethodreturns_description;
 	public static String ReturnTypeSubProcessor_removereturn_description;
 	public static String ReturnTypeSubProcessor_missingreturntype_description;
+	public static String ReturnTypeSubProcessor_addsupertype_description;
 	public static String ReturnTypeSubProcessor_wrongconstructorname_description;
 	public static String ReturnTypeSubProcessor_changetovoid_description;
 	public static String MissingReturnTypeCorrectionProposal_addreturnstatement_description;
@@ -408,4 +410,5 @@ public final class CorrectionMessages extends NLS {
 	public static String VarargsWarningsSubProcessor_add_safevarargs_label;
 	public static String VarargsWarningsSubProcessor_add_safevarargs_to_method_label;
 	public static String VarargsWarningsSubProcessor_remove_safevarargs_label;
+	
 }

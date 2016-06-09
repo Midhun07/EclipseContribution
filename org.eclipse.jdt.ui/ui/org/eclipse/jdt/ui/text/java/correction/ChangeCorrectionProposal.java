@@ -87,6 +87,7 @@ public class ChangeCorrectionProposal implements IJavaCompletionProposal, IComma
 		if (name == null) {
 			throw new IllegalArgumentException("Name must not be null"); //$NON-NLS-1$
 		}
+		
 		fName= name;
 		fChange= change;
 		fRelevance= relevance;
@@ -111,6 +112,7 @@ public class ChangeCorrectionProposal implements IJavaCompletionProposal, IComma
 	 */
 	@Override
 	public void apply(IDocument document) {
+		
 		try {
 			performChange(JavaPlugin.getActivePage().getActiveEditor(), document);
 		} catch (CoreException e) {
